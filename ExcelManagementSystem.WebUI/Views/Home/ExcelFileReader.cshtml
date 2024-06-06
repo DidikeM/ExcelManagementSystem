@@ -1,0 +1,52 @@
+﻿<form method="post" enctype="multipart/form-data">
+    <div class="row">
+        <label>Select File</label>
+        <input accept=".xlsx,.xls" type="file" name="file" />
+    </div>
+    <div class="row" style="padding-top: 10px;">
+        <div class="col-3">
+            <input type="submit" asp-controller="Home" asp-action="ExcelFileReader" class="btn btn-primary" value="Read Excel File" />
+        </div>
+    </div>
+</form>
+
+@{
+    var excelFile = ViewBag.ExcelData as ExcelManagementSystem.WebUI.ExcelObjects.ExcelFile;
+}
+
+@if (excelFile != null && excelFile.Worksheets.Any())
+{
+
+    <h1>@excelFile.Name</h1>
+
+    foreach (var worksheet in excelFile.Worksheets)
+    {
+        if (worksheet.Data != null)
+        {
+            <h2>@worksheet.Name</h2>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        @foreach (var header in worksheet.Data[0])
+                        {
+                            <th>@header</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 1; i < worksheet.Data.Length; i++)
+                    {
+                        <tr>
+                            @foreach (var cell in worksheet.Data[i])
+                            {
+                                <td>@cell</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+}

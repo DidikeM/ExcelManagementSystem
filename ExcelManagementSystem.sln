@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34902.65
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelManagementSystem.WebUI", "ExcelManagementSystem.WebUI\ExcelManagementSystem.WebUI.csproj", "{AAED07FF-8C66-453A-99CE-A5F39CB0C3B2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AAED07FF-8C66-453A-99CE-A5F39CB0C3B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAED07FF-8C66-453A-99CE-A5F39CB0C3B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAED07FF-8C66-453A-99CE-A5F39CB0C3B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAED07FF-8C66-453A-99CE-A5F39CB0C3B2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E85CE40F-AA61-4EED-8E8D-25B32AFE89DF}
+	EndGlobalSection
+EndGlobal
