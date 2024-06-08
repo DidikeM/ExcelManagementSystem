@@ -6,12 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Mvc;
 
 namespace ExcelManagementSystem.WebUI.Services
 {
     public class ExcelService
     {
-        public string UploadExcelFile(HttpPostedFileBase file)
+        public static string UploadExcelFile(HttpPostedFileBase file)
         {
             var uploadDirectory = HttpContext.Current.Server.MapPath("~/Uploads");
 
@@ -27,7 +28,7 @@ namespace ExcelManagementSystem.WebUI.Services
             return filePath;
         }
 
-        public ExcelFile ReadExcelFile(string path)
+        public static ExcelFile ReadExcelFile(string path)
         {
             FileInfo fileInfo = new FileInfo(path);
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -63,5 +64,36 @@ namespace ExcelManagementSystem.WebUI.Services
 
             return excelFile;
         }
+
+        //Download excel file
+        public static ActionResult DownloadExcelFile(ExcelFile excelFile)
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            ExcelPackage excelPackage = new ExcelPackage();
+            foreach (var worksheet in excelFile.Worksheets)
+            {
+                var excelWorksheet = excelPackage.Workbook.Worksheets.Add(worksheet.Name);
+                for (int i = 0; i < worksheet.Data.Length; i++)
+                {
+                    for (int j = 0; j < worksheet.Data[i].Length; j++)
+                    {
+                        excelWorksheet.Cells[i + 1, j + 1].Value = worksheet.Data[i][j];
+                    }
+                }
+                //first row bold,
+                excelWorksheet.Cells[1, 1, 1, worksheet.Data[0].Length].Style.Font.Bold = true;
+            }
+
+            var memoryStream = new MemoryStream();
+            excelPackage.SaveAs(memoryStream);
+
+            memoryStream.Position = 0;
+
+            return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = excelFile.Name
+            };
+        }
+
     }
 }

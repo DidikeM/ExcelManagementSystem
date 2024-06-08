@@ -12,15 +12,15 @@ namespace ExcelManagementSystem.WebUI.Controllers
     {
         public ActionResult Index()
         {
-            var connectionString = "Server=(localdb)\\mssqllocaldb;Trusted_Connection=True;MultipleActiveResultSets=true";
-            var databaseName = "ExcelManagementSystemm";
-            var tableName = "TestTable";
+            //var connectionString = "Server=(localdb)\\mssqllocaldb;Trusted_Connection=True;MultipleActiveResultSets=true";
+            //var databaseName = "ExcelManagementSystem";
+            //var tableName = "TestTable";
 
-            if (!SqlService.CheckDatabaseExists(connectionString, databaseName))
-            {
-                SqlService.CreateDatabase(connectionString, databaseName);
-            }
-            var asd = SqlService.DoesTableExist(connectionString, databaseName, tableName);
+            //if (!SqlService.DoesDatabaseExists(connectionString, databaseName))
+            //{
+            //    SqlService.CreateDatabase(connectionString, databaseName);
+            //}
+            //var asd = SqlService.DoesTableExist(connectionString, databaseName, tableName);
             return View();
         }
 
@@ -51,13 +51,46 @@ namespace ExcelManagementSystem.WebUI.Controllers
             // Upload File
             if (file != null && file.ContentLength > 0)
             {
-                ExcelService excelService = new ExcelService();
 
-                var filePath = excelService.UploadExcelFile(file);
+                var filePath = ExcelService.UploadExcelFile(file);
 
-                var excelFile = excelService.ReadExcelFile(filePath);
+                var excelFile = ExcelService.ReadExcelFile(filePath);
 
-                ViewBag.ExcelData = excelFile;
+                //ViewBag.ExcelData = excelFile;
+
+
+                var connectionString = "Server=(localdb)\\mssqllocaldb;Trusted_Connection=True;MultipleActiveResultSets=true";
+                var databaseName = "ExcelManagementSystem";
+                //var tableName = "TestTable";
+
+                DbManager.CheckAndCreateDatabase(connectionString, databaseName);
+
+                DbManager.CheckAndCreateExcelTables(connectionString, databaseName, excelFile);
+
+                var excelData = DbManager.GetExcelFile(connectionString, databaseName, excelFile.Name);
+                ViewBag.ExcelData = excelData;
+
+                //return ExcelService.DownloadExcelFile(excelFile);
+
+
+
+                //var asd = SqlService.DoesTableExist(connectionString, databaseName, tableName);
+
+                //foreach (var worksheet in excelFile.Worksheets)
+                //{
+                //    if (!SqlService.DoesTableExist(connectionString, databaseName, worksheet.Name))
+                //    {
+                //        SqlService.CreateTable(connectionString, databaseName, worksheet.Name, worksheet.Data[0].ToDictionary(x => x, x => "nvarchar(MAX)"));
+                //    }
+                //    else
+                //    {
+                //        SqlService.ClearTable(connectionString, databaseName, worksheet.Name);
+                //    }
+
+                //    SqlService.InsertData(connectionString, databaseName, worksheet.Name, worksheet.Data[0], worksheet.Data.Skip(1).ToArray());
+
+                //    //var asd = SqlService.ReadData(connectionString, databaseName, worksheet.Name);
+                //}
             }
             return View();
         }
