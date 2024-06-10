@@ -36,7 +36,6 @@ namespace ExcelManagementSystem.WebUI.Controllers
             }
             else
             {
-                //ViewBag.Message = "Please select a file to upload";
                 return View();
             }
         }
@@ -63,33 +62,6 @@ namespace ExcelManagementSystem.WebUI.Controllers
             ViewBag.ExcelData = excelData;
             return View();
         }
-
-        //[HttpPost]
-        //public ActionResult ExcelFileReader(HttpPostedFileBase file)
-        //{
-        //    //System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
-        //    // Upload File
-        //    if (file != null && file.ContentLength > 0)
-        //    {
-
-        //        var filePath = ExcelService.UploadExcelFile(file);
-
-        //        var excelFile = ExcelService.ReadExcelFile(filePath);
-
-        //        var connectionString = "Server=(localdb)\\mssqllocaldb;Trusted_Connection=True;MultipleActiveResultSets=true";
-        //        var databaseName = "ExcelManagementSystem";
-
-        //        DbManager.CheckAndCreateDatabase(connectionString, databaseName);
-
-        //        DbManager.CheckAndCreateExcelTables(connectionString, databaseName, excelFile);
-
-        //        var excelData = DbManager.GetExcelFile(connectionString, databaseName, excelFile.Name);
-        //        ViewBag.ExcelData = excelData;
-
-        //    }
-        //    return View();
-        //}
 
         [HttpGet, Route("Edit/{id}")]
         public ActionResult Edit(int Id, string worksheetName, string excelName)

@@ -63,23 +63,6 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        //public static void DropDatabase(string connectionString, string databaseName)
-        //{
-        //    using (SqlConnection conn = new SqlConnection(connectionString))
-        //    {
-        //        conn.Open();
-
-        //        string sql = $@"
-        //            ALTER DATABASE {databaseName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-        //            DROP DATABASE {databaseName}";
-
-        //        using (SqlCommand cmd = new SqlCommand(sql, conn))
-        //        {
-        //            cmd.ExecuteNonQuery();
-        //        }
-        //    }
-        //}
-
         public void ClearDatabase()
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -128,8 +111,6 @@ namespace ExcelManagementSystem.WebUI.Services
             {
                 conn.Open();
                 conn.ChangeDatabase(_databaseName);
-
-                //{string.Join(", ", columns.Select(x => $"[{x}] nvarchar(MAX)"))}
 
                 string sql = $@"
                     CREATE TABLE [{tableName}] (
@@ -267,28 +248,6 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        //public static void DoesColumnExist(string connectionString, string databaseName, string tableName, string columnName)
-        //{
-        //    using (SqlConnection conn = new SqlConnection(connectionString))
-        //    {
-        //        conn.Open();
-        //        conn.ChangeDatabase(databaseName);
-
-        //        string sql = $@"
-        //            SELECT COUNT(*) 
-        //            FROM INFORMATION_SCHEMA.COLUMNS 
-        //            WHERE TABLE_NAME = @TableName AND COLUMN_NAME = @ColumnName";
-
-        //        using (SqlCommand cmd = new SqlCommand(sql, conn))
-        //        {
-        //            cmd.Parameters.AddWithValue("@TableName", tableName);
-        //            cmd.Parameters.AddWithValue("@ColumnName", columnName);
-
-        //            int count = (int)cmd.ExecuteScalar();
-        //        }
-        //    }
-        //}
-
         public void InsertData(string tableName, string[] columns, string[][] data)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -314,33 +273,6 @@ namespace ExcelManagementSystem.WebUI.Services
                     }
                 }
             }
-            //using (SqlConnection conn = new SqlConnection(connectionString))
-            //{
-            //    conn.Open();
-            //    conn.ChangeDatabase(databaseName);
-
-            //    string sql = $@"
-            //        INSERT INTO {tableName} ({string.Join(", ", columns.Select(x => $"[{x}]"))})
-            //        VALUES ({string.Join(", ", columns.Select(x => $"@{x}"))})";
-
-            //    using (SqlCommand cmd = new SqlCommand(sql, conn))
-            //    {
-            //        for (int i = 0; i < columns.Length; i++)
-            //        {
-            //            cmd.Parameters.Add($"@{columns[i]}", SqlDbType.NVarChar);
-            //        }
-
-            //        foreach (var row in data)
-            //        {
-            //            for (int i = 0; i < columns.Length; i++)
-            //            {
-            //                cmd.Parameters[$"@{columns[i]}"].Value = row[i];
-            //            }
-
-            //            cmd.ExecuteNonQuery();
-            //        }
-            //    }
-            //}
         }
 
         public void ClearTable(string tableName)
@@ -439,22 +371,5 @@ namespace ExcelManagementSystem.WebUI.Services
                 }
             }
         }
-
-        //public static void DropTable(string connectionString, string databaseName, string tableName)
-        //{
-        //    using (SqlConnection conn = new SqlConnection(connectionString))
-        //    {
-        //        conn.Open();
-        //        conn.ChangeDatabase(databaseName);
-
-        //        string sql = $@"
-        //            DROP TABLE {tableName}";
-
-        //        using (SqlCommand cmd = new SqlCommand(sql, conn))
-        //        {
-        //            cmd.ExecuteNonQuery();
-        //        }
-        //    }
-        //}
     }
 }
