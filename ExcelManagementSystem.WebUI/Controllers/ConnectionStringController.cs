@@ -22,7 +22,7 @@ namespace ExcelManagementSystem.WebUI.Controllers
         {
             if (!ConnectionStringHelper.IsValidConnectionString(connectionString))
             {
-                ViewBag.ErrorMessage = "Geçersiz ConnectionString.";
+                ViewBag.ErrorMessage = "Invalid ConnectionString.";
             }
 
             if (SqlService.DoesDatabaseExists(connectionString, databaseName))
@@ -30,7 +30,7 @@ namespace ExcelManagementSystem.WebUI.Controllers
                 if (!continueDatabase)
                 {
                     ViewBag.DatabaseIsExist = true;
-                    ViewBag.ErrorMessage = "Veri tabanı zaten mevcut.";
+                    ViewBag.ErrorMessage = "Database Already Exists.";
                     return View();
                 }
             }
