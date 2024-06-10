@@ -1,0 +1,16 @@
+﻿
+@{
+    ViewBag.Title = "Upload Excel File";
+}
+
+<form method="post" enctype="multipart/form-data">
+    <div class="row">
+        <label>Select File</label>
+        <input accept=".xlsx,.xls" type="file" name="file" />
+    </div>
+    <div class="row" style="padding-top: 10px;">
+        <div class="col-3">
+            <input type="submit" formaction="@Url.Action("Upload", "Excel")" class="btn btn-primary" value="Read Excel File" />
+        </div>
+    </div>
+</form>

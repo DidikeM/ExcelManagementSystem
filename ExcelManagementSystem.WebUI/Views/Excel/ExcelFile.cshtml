@@ -1,16 +1,5 @@
-﻿<form method="post" enctype="multipart/form-data">
-    <div class="row">
-        <label>Select File</label>
-        <input accept=".xlsx,.xls" type="file" name="file" />
-    </div>
-    <div class="row" style="padding-top: 10px;">
-        <div class="col-3">
-            <input type="submit" asp-controller="Home" asp-action="ExcelFileReader" class="btn btn-primary" value="Read Excel File" />
-        </div>
-    </div>
-</form>
-
-@{
+﻿@{
+    ViewBag.Title = "Excel File";
     var excelFile = ViewBag.ExcelData as ExcelManagementSystem.WebUI.ExcelObjects.ExcelFile;
 }
 
@@ -18,6 +7,8 @@
 {
 
     <h1>@excelFile.Name</h1>
+
+    <a class="btn btn-success" href="@Url.Action("Download", "Excel", new { excelFileName = excelFile.Name })">Download</a>
 
     foreach (var worksheet in excelFile.Worksheets)
     {
@@ -28,20 +19,25 @@
             <table class="table">
                 <thead>
                     <tr>
-                        @foreach (var header in worksheet.Data[0])
+                        @foreach (var header in worksheet.Data[0].Skip(1))
                         {
                             <th>@header</th>
                         }
+                        <th>Option</th>
                     </tr>
                 </thead>
                 <tbody>
                     @for (int i = 1; i < worksheet.Data.Length; i++)
                     {
                         <tr>
-                            @foreach (var cell in worksheet.Data[i])
+                            @foreach (var cell in worksheet.Data[i].Skip(1))
                             {
                                 <td>@cell</td>
                             }
+                            <td>
+                                <a class="btn btn-warning" href="@Url.Action("Edit", "Excel", new { worksheetName = worksheet.Name, excelName = excelFile.Name, Id = worksheet.Data[i][0] })">Edit</a>
+                                <a class="btn btn-danger" href="@Url.Action("Delete", "Excel",new { worksheetName = worksheet.Name, excelName = excelFile.Name, Id = worksheet.Data[i][0] })">Delete</a>
+                            </td>
                         </tr>
                     }
                 </tbody>

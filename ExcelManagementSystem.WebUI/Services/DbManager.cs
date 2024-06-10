@@ -1,31 +1,39 @@
 ﻿using ExcelManagementSystem.WebUI.ExcelObjects;
+using ExcelManagementSystem.WebUI.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
+using System.Web.Management;
 using System.Xml.Linq;
 
 namespace ExcelManagementSystem.WebUI.Services
 {
     public class DbManager
     {
-        public static void CheckAndCreateDatabase(string connectionString, string databaseName)
+        public static void CheckAndPrepareDatabase(string connectionString, string databaseName, bool clearDatabase)
         {
+            var sqlService = new SqlService();
             if (!SqlService.DoesDatabaseExists(connectionString, databaseName))
             {
-                SqlService.CreateDatabase(connectionString, databaseName);
+                sqlService.CreateDatabase();
+            }
+            else if (clearDatabase)
+            {
+                sqlService.ClearDatabase();
             }
 
-            if (!SqlService.DoesTableExist(connectionString, databaseName, "ExcelFiles"))
+            if (!sqlService.DoesTableExist("ExcelFiles"))
             {
                 var columns = new Dictionary<string, string>
                 {
                     { "Name", "nvarchar(255)" }
                 };
-                SqlService.CreateTable(connectionString, databaseName, "ExcelFiles", columns);
+                sqlService.CreateTable("ExcelFiles", columns);
             }
 
-            if (!SqlService.DoesTableExist(connectionString, databaseName, "Worksheets"))
+            if (!sqlService.DoesTableExist("Worksheets"))
             {
                 var columns = new Dictionary<string, string>
                 {
@@ -33,44 +41,48 @@ namespace ExcelManagementSystem.WebUI.Services
                     { "Name", "nvarchar(255)" },
                     { "TableName", "nvarchar(max)" }
                 };
-                SqlService.CreateTable(connectionString, databaseName, "Worksheets", columns);
+                sqlService.CreateTable("Worksheets", columns);
             }
         }
 
-        public static void CheckAndCreateExcelTables(string connectionString, string databaseName, ExcelFile excelFile)
+        public static void CheckAndCreateExcelTables(ExcelFile excelFile)
         {
-            if (!SqlService.WhereExists(connectionString, databaseName, "ExcelFiles", "Name", excelFile.Name))
+            var sqlService = new SqlService();
+
+            if (!sqlService.WhereExists("ExcelFiles", "Name", excelFile.Name))
             {
-                SqlService.InsertData(connectionString, databaseName, "ExcelFiles", new string[] { "Name" }, new string[][] { new string[] { excelFile.Name } });
+                sqlService.InsertData("ExcelFiles", new string[] { "Name" }, new string[][] { new string[] { excelFile.Name } });
             }
 
-            var excelFileId = SqlService.Where(connectionString, databaseName, "ExcelFiles", new string[] { "ID" }, "Name", excelFile.Name)[0][0];
+            var excelFileId = sqlService.Where("ExcelFiles", "Name", excelFile.Name, new string[] { "ID" })[0][0];
 
             foreach (var worksheet in excelFile.Worksheets)
             {
-                if (!SqlService.WhereExists(connectionString, databaseName, "Worksheets", new string[] { "ExcelFileId", "Name" }, new string[] { excelFileId, worksheet.Name }))
+                if (!sqlService.WhereExists("Worksheets", new string[] { "ExcelFileId", "Name" }, new string[] { excelFileId, worksheet.Name }))
                 {
-                    SqlService.InsertData(connectionString, databaseName, "Worksheets", new string[] { "ExcelFileId", "Name", "TableName" }, new string[][] { new string[] { excelFileId, worksheet.Name, $"{excelFile.Name}_{worksheet.Name}" } });
+                    sqlService.InsertData("Worksheets", new string[] { "ExcelFileId", "Name", "TableName" }, new string[][] { new string[] { excelFileId, worksheet.Name, $"{excelFile.Name}_{worksheet.Name}" } });
                     
                 }
 
-                if (!SqlService.DoesTableExist(connectionString, databaseName, $"{excelFile.Name}_{worksheet.Name}"))
+                if (!sqlService.DoesTableExist($"{excelFile.Name}_{worksheet.Name}"))
                 {
-                    SqlService.CreateTable(connectionString, databaseName, $"{excelFile.Name}_{worksheet.Name}", worksheet.Data[0].ToDictionary(x => x, x => "nvarchar(MAX)"));
+                    sqlService.CreateTable($"{excelFile.Name}_{worksheet.Name}", worksheet.Data[0].ToDictionary(x => x, x => "nvarchar(MAX)"));
                 }
                 else
                 {
-                    SqlService.ClearTable(connectionString, databaseName, $"{excelFile.Name}_{worksheet.Name}");
+                    sqlService.ClearTable($"{excelFile.Name}_{worksheet.Name}");
                 }
-                SqlService.InsertData(connectionString, databaseName, $"{excelFile.Name}_{worksheet.Name}", worksheet.Data[0], worksheet.Data.Skip(1).ToArray());
+                sqlService.InsertData($"{excelFile.Name}_{worksheet.Name}", worksheet.Data[0], worksheet.Data.Skip(1).ToArray());
             }
         }
 
-        public static ExcelFile GetExcelFile(string connectionString, string databaseName, string excelFileName)
+        public static ExcelFile GetExcelFile(string excelFileName)
         {
-            var excelFileId = SqlService.Where(connectionString, databaseName, "ExcelFiles", new string[] { "ID" }, "Name", excelFileName)[0][0];
+            var sqlService = new SqlService();
 
-            var worksheets = SqlService.Where(connectionString, databaseName, "Worksheets", new string[] { "Name", "TableName" }, "ExcelFileId", excelFileId);
+            var excelFileId = sqlService.Where("ExcelFiles", "Name", excelFileName, new string[] { "ID" })[0][0];
+
+            var worksheets = sqlService.Where("Worksheets", "ExcelFileId", excelFileId, new string[] { "Name", "TableName" });
 
             ExcelFile excelFile = new ExcelFile
             {
@@ -79,8 +91,8 @@ namespace ExcelManagementSystem.WebUI.Services
 
             foreach (var worksheet in worksheets)
             {
-                var worksheetData = SqlService.ReadData(connectionString, databaseName, worksheet[1]);
-                var worksheetColumns = SqlService.GetColumns(connectionString, databaseName, worksheet[1]);
+                var worksheetData = sqlService.ReadData(worksheet[1]);
+                var worksheetColumns = sqlService.GetColumns(worksheet[1]);
 
                 excelFile.Worksheets.Add(new Worksheet
                 {
@@ -90,6 +102,12 @@ namespace ExcelManagementSystem.WebUI.Services
             }
 
             return excelFile;
+        }
+
+        public static string[] GetExcelFileNames()
+        {
+            var sqlService = new SqlService();
+            return sqlService.ReadData("ExcelFiles").Select(x => x[1]).ToArray();
         }
     }
 }

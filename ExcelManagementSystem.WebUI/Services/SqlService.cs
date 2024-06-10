@@ -9,6 +9,14 @@ namespace ExcelManagementSystem.WebUI.Services
 {
     public class SqlService
     {
+        private readonly string _connectionString;
+        private readonly string _databaseName;
+
+        public SqlService()
+        {
+            _connectionString = HttpContext.Current.Session["ConnectionString"].ToString();
+            _databaseName = HttpContext.Current.Session["DatabaseName"].ToString();
+        }
 
         public static bool DoesDatabaseExists(string connectionString, string databaseName)
         {
@@ -39,14 +47,14 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        public static void CreateDatabase(string connectionString, string databaseName)
+        public void CreateDatabase()
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
 
                 string sql = $@"
-                    CREATE DATABASE {databaseName}";
+                    CREATE DATABASE {_databaseName}";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -54,12 +62,51 @@ namespace ExcelManagementSystem.WebUI.Services
                 }
             }
         }
-        public static bool DoesTableExist(string connectionString, string databaseName, string tableName)
+
+        //public static void DropDatabase(string connectionString, string databaseName)
+        //{
+        //    using (SqlConnection conn = new SqlConnection(connectionString))
+        //    {
+        //        conn.Open();
+
+        //        string sql = $@"
+        //            ALTER DATABASE {databaseName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        //            DROP DATABASE {databaseName}";
+
+        //        using (SqlCommand cmd = new SqlCommand(sql, conn))
+        //        {
+        //            cmd.ExecuteNonQuery();
+        //        }
+        //    }
+        //}
+
+        public void ClearDatabase()
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
+
+                string sql = $@"
+                    EXEC sp_MSforeachtable 'DISABLE TRIGGER ALL ON ?';
+                    EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
+                    EXEC sp_MSforeachtable 'DELETE FROM ?';
+                    EXEC sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL';
+                    EXEC sp_MSforeachtable 'ENABLE TRIGGER ALL ON ?'";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public bool DoesTableExist(string tableName)
+        {
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                conn.ChangeDatabase(_databaseName);
                 string sql = $@"
                     SELECT COUNT(*) 
                     FROM INFORMATION_SCHEMA.TABLES 
@@ -75,12 +122,12 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        public static void CreateTable(string connectionString, string databaseName, string tableName, Dictionary<string, string> columns)
+        public void CreateTable(string tableName, Dictionary<string, string> columns)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
 
                 //{string.Join(", ", columns.Select(x => $"[{x}] nvarchar(MAX)"))}
 
@@ -97,17 +144,30 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        public static string[][] Where(string connectionString, string databaseName, string tableName, string[] columns, string[] whereColumns, string[] whereValues)
+        public string[][] Where(string tableName, string[] whereColumns, string[] whereValues, string[] columns = null)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
 
-                string sql = $@"
-                    SELECT {string.Join(", ", columns.Select(x => $"[{x}]"))} 
-                    FROM {tableName} 
+                string sql;
+
+                if (columns == null)
+                {
+                    sql = $@"
+                    SELECT * 
+                    FROM [{tableName}] 
                     WHERE {string.Join(" AND ", whereColumns.Select((x, i) => $"[{x}] = @p{i}"))}";
+                }
+                else
+                {
+                    sql = $@"
+                    SELECT {string.Join(", ", columns.Select(x => $"[{x}]"))} 
+                    FROM [{tableName}] 
+                    WHERE {string.Join(" AND ", whereColumns.Select((x, i) => $"[{x}] = @p{i}"))}";
+                }
+                
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -122,13 +182,13 @@ namespace ExcelManagementSystem.WebUI.Services
 
                         while (reader.Read())
                         {
-                            string[] row = new string[columns.Length];
+                            string[] row = new string[reader.FieldCount];
 
-                            for (int i = 0; i < columns.Length; i++)
+                            for (int i = 0; i < reader.FieldCount; i++)
                             {
                                 //row[i] = reader.GetString(i);
                                 object columnValue = reader.GetValue(i);
-                                row[i] = columnValue == null ? null : columnValue.ToString();
+                                row[i] = columnValue?.ToString();
                             }
 
                             data.Add(row);
@@ -140,17 +200,18 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        public static string[][] Where(string connectionString, string databaseName, string tableName, string[] columns, string whereColumn, string whereValue)
+        public string[][] Where(string tableName, string whereColumn, string whereValue, string[] columns = null)
         {
-            return Where(connectionString, databaseName, tableName, columns, new string[] { whereColumn }, new string[] { whereValue });
+            return Where(tableName, new string[] { whereColumn }, new string[] { whereValue }, columns);
         }
 
-        public static bool WhereExists(string connectionString, string databaseName, string tableName, string[] whereColumns, string[] whereValues)
+
+        public bool WhereExists(string tableName, string[] whereColumns, string[] whereValues)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
 
                 string sql = $@"
                     SELECT COUNT(*) 
@@ -170,17 +231,17 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        public static bool WhereExists(string connectionString, string databaseName, string tableName, string whereColumn, string whereValue)
+        public bool WhereExists(string tableName, string whereColumn, string whereValue)
         {
-            return WhereExists(connectionString, databaseName, tableName, new string[] { whereColumn }, new string[] { whereValue });
+            return WhereExists(tableName, new string[] { whereColumn }, new string[] { whereValue });
         }
 
-        public static string[] GetColumns(string connectionString, string databaseName, string tableName)
+        public string[] GetColumns(string tableName)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
 
                 string sql = $@"
                     SELECT COLUMN_NAME 
@@ -228,12 +289,12 @@ namespace ExcelManagementSystem.WebUI.Services
         //    }
         //}
 
-        public static void InsertData(string connectionString, string databaseName, string tableName, string[] columns, string[][] data)
+        public void InsertData(string tableName, string[] columns, string[][] data)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
 
                 foreach (var row in data)
                 {
@@ -282,12 +343,12 @@ namespace ExcelManagementSystem.WebUI.Services
             //}
         }
 
-        public static void ClearTable(string connectionString, string databaseName, string tableName)
+        public void ClearTable(string tableName)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
 
                 string sql = $@"
                     DELETE FROM [{tableName}];
@@ -300,12 +361,12 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        public static string[][] ReadData(string connectionString, string databaseName, string tableName)
+        public string[][] ReadData(string tableName)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
-                conn.ChangeDatabase(databaseName);
+                conn.ChangeDatabase(_databaseName);
 
                 string sql = $@"
                     SELECT * FROM [{tableName}]";
@@ -330,22 +391,54 @@ namespace ExcelManagementSystem.WebUI.Services
             }
         }
 
-        //public static void DropDatabase(string connectionString, string databaseName)
-        //{
-        //    using (SqlConnection conn = new SqlConnection(connectionString))
-        //    {
-        //        conn.Open();
+        public void UpdateData(string tableName, int Id, string[] columns, List<string> values)
+        {
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                conn.ChangeDatabase(_databaseName);
 
-        //        string sql = $@"
-        //            ALTER DATABASE {databaseName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-        //            DROP DATABASE {databaseName}";
+                var updateColumns = columns.Where(column => column != "ID").ToArray();
 
-        //        using (SqlCommand cmd = new SqlCommand(sql, conn))
-        //        {
-        //            cmd.ExecuteNonQuery();
-        //        }
-        //    }
-        //}
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = $@"
+                        UPDATE [{tableName}] 
+                        SET {string.Join(", ", updateColumns.Select((x, i) => $"[{x}] = @p{i}"))}
+                        WHERE ID = @Id";
+
+                    for (int i = 0; i < values.Count; i++)
+                    {
+                        cmd.Parameters.AddWithValue($"@p{i}", values[i]);
+                    }
+                    cmd.Parameters.AddWithValue("@Id", Id);
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void DeleteData(string tableName, int Id)
+        {
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                conn.ChangeDatabase(_databaseName);
+
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = $@"
+                        DELETE FROM [{tableName}] 
+                        WHERE ID = @Id";
+
+                    cmd.Parameters.AddWithValue("@Id", Id);
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
 
         //public static void DropTable(string connectionString, string databaseName, string tableName)
         //{

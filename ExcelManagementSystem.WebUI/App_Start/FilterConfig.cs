@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using ExcelManagementSystem.WebUI.ActionFilters;
+using System.Web;
 using System.Web.Mvc;
 
 namespace ExcelManagementSystem.WebUI
@@ -8,6 +9,7 @@ namespace ExcelManagementSystem.WebUI
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new HandleErrorAttribute());
+            filters.Add(new ConnectionStringFilter());
         }
     }
 }

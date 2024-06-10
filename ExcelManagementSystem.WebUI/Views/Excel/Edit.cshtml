@@ -1,0 +1,35 @@
+﻿@{
+    ViewBag.Title = "Edit";
+    string[] row = ViewBag.Row as string[];
+    string[] columns = ViewBag.Columns as string[];
+}
+
+<h2>Edit</h2>
+
+@using (Html.BeginForm())
+{
+
+    <div class="form-horizontal">
+        @*<h4>Worksheet</h4>*@
+        <hr />
+        @for (int i = 1; i < row.Length; i++)
+        {
+            <div class="form-group">
+                @Html.Label(columns[i], htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextBox(columns[i], row[i], new { htmlAttributes = new { @class = "form-control"} })
+                </div>
+            </div>
+        }
+
+        <div class="form-group" style="padding-top: 10px;">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "ExcelFile", new { excelFileName = ViewBag.ExcelName })
+</div>

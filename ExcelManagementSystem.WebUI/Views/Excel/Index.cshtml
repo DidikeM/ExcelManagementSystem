@@ -1,0 +1,30 @@
+﻿
+@{
+    ViewBag.Title = "Files";
+    var excelFileNames = ViewBag.ExcelFileNames as string[];
+}
+
+<h1>Uploaded Files</h1>
+<a class="btn btn-secondary" href="@Url.Action("Upload", "Excel")">Upload File</a>
+@if (excelFileNames != null && excelFileNames.Any())
+{<table class="table">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Option</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var excelFileName in excelFileNames)
+            {
+                <tr>
+                    <td>@excelFileName</td>
+                    <td>
+                        <a class="btn btn-primary" href="@Url.Action("ExcelFile", "Excel",new { excelFileName = excelFileName})">Show</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}

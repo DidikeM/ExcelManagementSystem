@@ -65,6 +65,27 @@ namespace ExcelManagementSystem.WebUI.Services
             return excelFile;
         }
 
+        public static byte[] CreateExcelFile(ExcelFile excelFile)
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            ExcelPackage excelPackage = new ExcelPackage();
+            foreach (var worksheet in excelFile.Worksheets)
+            {
+                var excelWorksheet = excelPackage.Workbook.Worksheets.Add(worksheet.Name);
+                for (int i = 0; i < worksheet.Data.Length; i++)
+                {
+                    for (int j = 0; j < worksheet.Data[i].Length; j++)
+                    {
+                        excelWorksheet.Cells[i + 1, j + 1].Value = worksheet.Data[i][j];
+                    }
+                }
+                //first row bold,
+                excelWorksheet.Cells[1, 1, 1, worksheet.Data[0].Length].Style.Font.Bold = true;
+            }
+
+            return excelPackage.GetAsByteArray();
+        }
+
         //Download excel file
         public static ActionResult DownloadExcelFile(ExcelFile excelFile)
         {

@@ -1,0 +1,93 @@
+﻿@{
+    ViewBag.Title = "ConnectionString";
+    var connectionString = ViewBag.ConnectionString as string;
+    //string[] columns = ViewBag.Columns as string[];
+}
+
+<h2>Edit</h2>
+
+@using (Html.BeginForm())
+{
+
+    <div class="form-horizontal">
+        <hr />
+        <div class="form-group">
+            @Html.Label("Connection String", htmlAttributes: new { @class = "control form-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextBox("connectionString", connectionString, new { htmlAttributes = new { @class = "form-control" } })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.Label("Database Name", htmlAttributes: new { @class = "control form-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextBox("databaseName", connectionString, new { htmlAttributes = new { @class = "form-control" } })
+            </div>
+        </div>
+
+        @Html.Hidden("clearDatabase", false)
+        @Html.Hidden("continueDatabase", false)
+
+        <div class="form-group" style="padding-top: 10px;">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </div>
+    </div>
+}
+
+@if ((bool?)ViewBag.DatabaseIsExist == true)
+{
+    <div class="modal fade" id="databaseExistsModal" tabindex="-1" role="document" aria-labelledby="databaseExistsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="databaseExistsModalLabel">Database Already Exists</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    A database with this name already exists. Do you want to reset the database?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="changeName"  data-dismiss="modal">Change Name</button>
+                    <button type="button" class="btn btn-primary" id="continueWithoutReset">Continue Without Reset</button>
+                    <button type="button" class="btn btn-danger" id="resetDatabase">Yes, Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#databaseExistsModal').modal('show');
+
+            $('#continueWithoutReset').click(function () {
+                $('input[name="clearDatabase"]').val('false');
+                $('input[name="continueDatabase"]').val('true');
+                $('form').submit();
+            });
+
+            $('#resetDatabase').click(function () {
+                $('input[name="clearDatabase"]').val('true');
+                $('input[name="continueDatabase"]').val('true');
+                $('form').submit();
+            });
+
+            $('#changeName').click(function () {
+                $('#databaseExistsModal').modal('hide');
+            });
+        });
+    </script>
+}
+
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        @ViewBag.ErrorMessage
+    </div>
+}
+
